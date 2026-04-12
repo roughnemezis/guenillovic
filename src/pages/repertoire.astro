@@ -1,0 +1,40 @@
+---
+const songs = [
+  { name: "Dada Sali", file: "/dada_sali_slonovski.mp3" },
+  { name: "Late Lounge Jazz", file: "/late_lounge_jazz.mp3" },
+];
+---
+
+<html>
+  <head>
+    <title>Music Player</title>
+    <style>
+      .player {
+        border: 1px solid #ccc;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        max-width: 400px;
+      }
+      .controls {
+        margin-top: 0.5rem;
+      }
+      button {
+        margin-right: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Music Player</h1>
+    {songs.map((song, idx) => (
+      <div class="player" id={`player-${idx}`}>
+        <div><strong>{song.name}</strong></div>
+        <audio id={`audio-${idx}`} src={song.file}></audio>
+        <div class="controls">
+          <button onclick={`document.getElementById('audio-${idx}').play()`}>Play</button>
+          <button onclick={`document.getElementById('audio-${idx}').pause()`}>Pause</button>
+        </div>
+      </div>
+    ))}
+  </body>
+</html>
