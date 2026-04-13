@@ -1,23 +1,171 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
-</html>
+---
+const { title } = Astro.props;
+---
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{title} — Guenillovic</title>
+    <style>
+      /*
+        Palette Sandstorm (Canva)
+        --sand-1: #e8dcc8  (sable clair  — fond principal)
+        --sand-2: #d4c4a0  (sable moyen  — surfaces secondaires)
+        --sand-3: #c0a878  (sable doré   — accents doux)
+        --sand-4: #a08050  (brun sable   — bordures, texte secondaire)
+        --sand-5: #6c5030  (brun foncé   — texte principal, éléments forts)
+      */
+
+      /* ── Reset & base ── */
+      *, *::before, *::after { box-sizing: border-box; }
+
+      html { min-height: 100%; }
+
+      body {
+        font-family: Georgia, 'Times New Roman', serif;
+        background-color: #e8dcc8;
+        background-image:
+          radial-gradient(ellipse at 15% 25%, #d4c4a0 0%, transparent 55%),
+          radial-gradient(ellipse at 85% 75%, #d4c4a0 0%, transparent 55%);
+        color: #6c5030;
+        max-width: 740px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+        min-height: 100vh;
+      }
+
+      /* ── Navigation ── */
+      nav {
+        margin-bottom: 2.5rem;
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        font-size: 0.85rem;
+        letter-spacing: 0.04em;
+        color: #a08050;
+      }
+      nav a {
+        color: #6c5030;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s;
+      }
+      nav a:hover { color: #a08050; }
+
+      /* ── Page title (h1) ── */
+      h1 {
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #6c5030;
+        letter-spacing: 0.02em;
+        margin: 0 0 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #a08050;
+      }
+
+      /* ── Section headers inside markdown content ── */
+      .prose h2 {
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #6c5030;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin: 2rem 0 0.75rem;
+        padding: 0.4rem 0.9rem;
+        background: #d4c4a0;
+        border-left: 4px solid #a08050;
+        border-radius: 0 4px 4px 0;
+      }
+
+      .prose h3 {
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #6c5030;
+        margin: 1.5rem 0 0.5rem;
+        padding-left: 0.6rem;
+        border-left: 2px solid #c0a878;
+      }
+
+      /* ── Tables (accords) ── */
+      .prose table {
+        border-collapse: collapse;
+        margin: 0.75rem 0 1.25rem;
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        font-size: 0.95rem;
+        width: auto;
+      }
+      .prose th {
+        background: #a08050;
+        color: #e8dcc8;
+        padding: 0.4rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+      .prose td {
+        padding: 0.35rem 1rem;
+        border-bottom: 1px solid #d4c4a0;
+        color: #6c5030;
+      }
+      .prose tr:last-child td { border-bottom: none; }
+      .prose tr:nth-child(even) td { background: rgba(192, 168, 120, 0.15); }
+
+      /* ── Body text & lists ── */
+      .prose p, .prose li {
+        font-size: 1rem;
+        line-height: 1.7;
+        color: #6c5030;
+      }
+      .prose ul { padding-left: 1.4rem; }
+      .prose li { margin-bottom: 0.25rem; }
+
+      /* ── Inline code / strong ── */
+      .prose strong { color: #6c5030; font-weight: 700; }
+      .prose code {
+        background: #d4c4a0;
+        padding: 0.1em 0.35em;
+        border-radius: 3px;
+        font-size: 0.9em;
+      }
+
+      /* ── Repertoire list ── */
+      ul.repertoire {
+        list-style: none;
+        padding: 0;
+        margin: 1.5rem 0 0;
+      }
+      ul.repertoire li {
+        margin-bottom: 0.6rem;
+      }
+      ul.repertoire a {
+        display: inline-block;
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        font-size: 1.1rem;
+        color: #6c5030;
+        text-decoration: none;
+        padding: 0.45rem 0.9rem;
+        border: 1px solid #a08050;
+        border-radius: 6px;
+        background: #d4c4a0;
+        transition: background 0.2s, border-color 0.2s;
+      }
+      ul.repertoire a:hover {
+        background: #c0a878;
+        border-color: #6c5030;
+      }
+
+      /* ── Generic links in content ── */
+      a { color: #6c5030; text-decoration: underline; }
+      a:hover { color: #a08050; }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">Accueil</a> <span aria-hidden="true">/</span> <a href="/repertoire">Répertoire</a></nav>
+    <div class="prose">
+      <slot />
+    </div>
+  </body>
+</html>

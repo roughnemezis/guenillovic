@@ -1,0 +1,23 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import MusicPlayer from '../../components/MusicPlayer.astro';
+
+export async function getStaticPaths() {
+  const morceaux = await getCollection('morceaux');
+  return morceaux.map((morceau) => ({
+    params: { slug: morceau.id },
+    props: { morceau },
+  }));
+}
+
+const { morceau } = Astro.props;
+const { title, audioFile } = morceau.data;
+const { Content } = await render(morceau);
+---
+
+<Layout title={title}>
+  <h1>{title}</h1>
+  <MusicPlayer name={title} file={audioFile} />
+  <Content />
+</Layout>

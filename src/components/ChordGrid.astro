@@ -1,0 +1,210 @@
+---
+/**
+ * ChordGrid — grille d'accords, mesures de largeur égale, multi-lignes.
+ *
+ * Usage dans un fichier .mdx :
+ *   <ChordGrid chords="Am | Dm7 | % | E7 G" />
+ *
+ * - Les mesures sont délimitées par |
+ * - Les accords dans une mesure sont séparés par des espaces
+ * - % = répétition de la mesure précédente
+ */
+
+interface ParsedChord {
+  root: string;
+  alter: string;
+  suffix: string;
+  bass: string;
+}
+
+type Cell = { type: 'chord'; chord: ParsedChord } | { type: 'repeat' };
+type Measure = Cell[];
+
+function parseChord(raw: string): ParsedChord {
+  const slashIdx = raw.indexOf('/');
+  const main = slashIdx >= 0 ? raw.slice(0, slashIdx) : raw;
+  const bass = slashIdx >= 0 ? raw.slice(slashIdx + 1) : '';
+
+  const rootMatch = main.match(/^([A-G])/);
+  const root = rootMatch ? rootMatch[1] : main;
+  const afterRoot = main.slice(root.length);
+
+  let alter = '';
+  let rest = afterRoot;
+  if (rest.startsWith('#')) {
+    alter = '♯'; rest = rest.slice(1);
+  } else if (rest.startsWith('b') && rest.length > 1) {
+    alter = '♭'; rest = rest.slice(1);
+  }
+
+  return { root, alter, suffix: rest, bass };
+}
+
+function parseMeasures(input: string): Measure[] {
+  return input
+    .split('|')
+    .map(s => s.trim())
+    .filter(Boolean)
+    .map(measureStr => {
+      const tokens = measureStr.split(/\s+/).filter(Boolean);
+      return tokens.map(token =>
+        token === '%'
+          ? { type: 'repeat' as const }
+          : { type: 'chord' as const, chord: parseChord(token) }
+      );
+    });
+}
+
+const { chords } = Astro.props as { chords: string };
+const measures: Measure[] = parseMeasures(chords ?? '');
+const count = measures.length;
+---
+
+<div class="chord-grid" data-count={count}>
+  {measures.map((measure, i) => (
+    <div class="measure" data-index={i}>
+      {measure.map(cell =>
+        cell.type === 'repeat' ? (
+          <div class="chord-cell repeat-cell">
+            <span class="repeat-symbol">%</span>
+          </div>
+        ) : (
+          <div class="chord-cell">
+            <div class="chord-name">
+              <span class="chord-root">{cell.chord.root}</span>
+              {cell.chord.alter && <sup class="chord-alter">{cell.chord.alter}</sup>}
+              {cell.chord.suffix && <span class="chord-suffix">{cell.chord.suffix}</span>}
+            </div>
+            {cell.chord.bass && <div class="chord-bass">/{cell.chord.bass}</div>}
+          </div>
+        )
+      )}
+    </div>
+  ))}
+</div>
+
+<style>
+  .chord-grid {
+    /* S'adapte à son contenu mais ne dépasse pas la largeur dispo */
+    display: inline-grid;
+    max-width: 100%;
+    /* Les colonnes sont définies par JS via --cols */
+    grid-template-columns: repeat(var(--cols, 4), 1fr);
+    background: #d4c4a0;
+    border: 1.5px solid #a08050;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1rem 0 1.5rem;
+  }
+
+  .measure {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.8rem;
+    /* Bordures entre cellules — JS active/désactive selon position */
+    border-right: 1.5px solid #a08050;
+    border-bottom: 1.5px solid #a08050;
+  }
+
+  /* JS retire border-right sur la dernière colonne de chaque ligne,
+     et border-bottom sur la dernière ligne */
+
+  .chord-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+  }
+
+  .chord-name {
+    display: flex;
+    align-items: baseline;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    color: #6c5030;
+  }
+
+  .chord-root {
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .chord-alter {
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 0;
+    vertical-align: super;
+    color: #a08050;
+    margin-left: 0.05em;
+  }
+
+  .chord-suffix {
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #a08050;
+    align-self: flex-end;
+    padding-bottom: 0.15em;
+    margin-left: 0.05em;
+  }
+
+  .chord-bass {
+    font-size: 0.7rem;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #a08050;
+    margin-top: 0.15rem;
+  }
+
+  .repeat-cell {
+    padding: 0 0.65rem;
+  }
+
+  .repeat-symbol {
+    font-size: 1.7rem;
+    font-weight: 300;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    color: #a08050;
+    line-height: 1;
+  }
+</style>
+
+<script>
+  // Largeur minimale d'une mesure en pixels — en dessous on réduit le nombre de colonnes
+  const MIN_MEASURE_WIDTH = 80;
+
+  function updateGrid(grid: HTMLElement) {
+    const count = parseInt(grid.dataset.count ?? '1', 10);
+    const available = grid.parentElement?.clientWidth ?? grid.clientWidth;
+    const measures = Array.from(grid.querySelectorAll<HTMLElement>('.measure'));
+
+    // Calcule le nombre de colonnes qui tient dans la largeur disponible
+    let cols = count;
+    while (cols > 1 && available / cols < MIN_MEASURE_WIDTH) {
+      cols--;
+    }
+
+    grid.style.setProperty('--cols', String(cols));
+
+    // Met à jour les bordures : retire border-right sur col finale,
+    // retire border-bottom sur la dernière ligne.
+    const rows = Math.ceil(count / cols);
+
+    measures.forEach((m, i) => {
+      const col = i % cols;           // 0-indexed colonne
+      const row = Math.floor(i / cols); // 0-indexed ligne
+
+      const isLastCol = col === cols - 1;
+      const isLastRow = row === rows - 1;
+
+      m.style.borderRight = isLastCol ? 'none' : '1.5px solid #a08050';
+      m.style.borderBottom = isLastRow ? 'none' : '1.5px solid #a08050';
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('.chord-grid').forEach(grid => {
+    updateGrid(grid);
+    const ro = new ResizeObserver(() => updateGrid(grid));
+    ro.observe(grid.parentElement ?? grid);
+  });
+</script>
